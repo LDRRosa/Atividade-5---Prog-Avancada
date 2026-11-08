@@ -121,8 +121,38 @@ void main() {
 
       expect(find.text('Cadastrar Produto'), findsOneWidget);
       expect(find.text('Informe o nome do produto'), findsOneWidget);
-      expect(find.text('Informe um preço válido (ex.: 49,90)'), findsOneWidget);
+      expect(find.text('Informe o preço'), findsOneWidget);
       expect(find.text('Escolha uma categoria'), findsOneWidget);
+    });
+
+    testWidgets('aplica as regras de nome e preço', (tester) async {
+      await tester.pumpWidget(const CatalogoApp());
+      await abrirCadastro(tester);
+
+      Future<void> confirmarCom(String nome, String preco) async {
+        await tester.enterText(find.byType(TextFormField).at(0), nome);
+        await tester.enterText(find.byType(TextFormField).at(1), preco);
+        await tester.tap(find.text('Confirmar cadastro'));
+        await tester.pump();
+      }
+
+      await confirmarCom('ab', 'abc');
+      expect(
+        find.text('O nome deve ter pelo menos 3 caracteres'),
+        findsOneWidget,
+      );
+      expect(find.text('Informe um preço válido (ex.: 49,90)'), findsOneWidget);
+
+      await confirmarCom('123', '0');
+      expect(find.text('O nome deve conter letras'), findsOneWidget);
+      expect(find.text('O preço deve ser maior que zero'), findsOneWidget);
+
+      await confirmarCom('Mouse', '200000');
+      expect(
+        find.text('O preço deve ser no máximo R\$ 100.000,00'),
+        findsOneWidget,
+      );
+      expect(find.text('Cadastrar Produto'), findsOneWidget);
     });
 
     testWidgets('erro da categoria some ao escolher uma opção', (tester) async {

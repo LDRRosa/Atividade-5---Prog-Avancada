@@ -13,6 +13,11 @@ class PaginaCadastro extends StatefulWidget {
   State<PaginaCadastro> createState() => _PaginaCadastroState();
 }
 
+const _tamanhoMaximoNome = 50;
+const _precoMaximo = 100000.0;
+
+final _temLetra = RegExp(r'[A-Za-zÀ-ÿ]');
+
 class _PaginaCadastroState extends State<PaginaCadastro> {
   final _formulario = GlobalKey<FormState>();
 
@@ -28,10 +33,24 @@ class _PaginaCadastroState extends State<PaginaCadastro> {
     Navigator.pop(context, Produto(_nome, _preco, _categoria));
   }
 
+  String? _validarNome(String? texto) {
+    final nome = (texto ?? '').trim();
+    if (nome.isEmpty) return 'Informe o nome do produto';
+    if (nome.length < 3) return 'O nome deve ter pelo menos 3 caracteres';
+    if (nome.length > _tamanhoMaximoNome) {
+      return 'O nome deve ter no máximo $_tamanhoMaximoNome caracteres';
+    }
+    if (!_temLetra.hasMatch(nome)) return 'O nome deve conter letras';
+    return null;
+  }
+
   String? _validarPreco(String? texto) {
-    final preco = converterPreco(texto ?? '');
-    if (preco == null || preco <= 0) {
-      return 'Informe um preço válido (ex.: 49,90)';
+    if ((texto ?? '').trim().isEmpty) return 'Informe o preço';
+    final preco = converterPreco(texto!);
+    if (preco == null) return 'Informe um preço válido (ex.: 49,90)';
+    if (preco <= 0) return 'O preço deve ser maior que zero';
+    if (preco > _precoMaximo) {
+      return 'O preço deve ser no máximo ${formatarPreco(_precoMaximo)}';
     }
     return null;
   }
@@ -53,9 +72,8 @@ class _PaginaCadastroState extends State<PaginaCadastro> {
               ),
               textCapitalization: TextCapitalization.sentences,
               textInputAction: TextInputAction.next,
-              validator: (texto) => (texto ?? '').trim().isEmpty
-                  ? 'Informe o nome do produto'
-                  : null,
+              maxLength: _tamanhoMaximoNome,
+              validator: _validarNome,
               onSaved: (texto) => _nome = texto!.trim(),
             ),
             const SizedBox(height: 16),
